@@ -1,9 +1,9 @@
 {
-  "name": "yit-h5",
+  "name": "react-little-h5",
   "version": "0.1.0",
   "private": true,
   "author": "@wangfeng",
-  "description": "Yit front end solution",
+  "description": "create-react-app-redux-router-sass-asyncComponent-eslint-babel",
   "dependencies": {
     "antd-mobile": "^1.6.8",
     "autoprefixer": "7.1.2",
