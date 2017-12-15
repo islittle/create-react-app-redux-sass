@@ -1,0 +1,7 @@
+FROM {{DOCKER_REGISTRY}}/base/nginx:1.8.1
+MAINTAINER Admin <admin@yit.com>
+
+COPY build/ /yit/www/h5/
+RUN chown -R nginx:nginx /yit/www
+
+CMD ["/usr/sbin/nginx", "-g", "daemon off;"]

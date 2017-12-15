@@ -1,0 +1,40 @@
+user  nginx;
+worker_processes  1;
+error_log  /var/log/nginx/error.log warn;
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for" "$http_x_forwarded_proto" "$upstream_addr"';
+
+    access_log  /var/log/nginx/access.log  main;
+    sendfile        on;
+    tcp_nopush     on;
+    keepalive_timeout  65;
+    gzip  on;
+
+    server {
+        listen 80 default_server;
+
+        root /yit/www/h5;
+        index index.html index.htm;
+        error_page 404 = http://asset.yit.com/h5/404.html?from=http://{{H5_WECHAT_REFACTOR_DOMAIN}};
+        # Make site accessible from http://localhost/
+        server_name {{H5_WECHAT_REFACTOR_DOMAIN}};
+
+        location / {
+            expires 1h;
+            # First attempt to serve request as file, then
+            # as directory, then fall back to displaying a 404.
+            try_files $uri $uri/ =404;
+            # Uncomment to enable naxsi on this location
+            # include /etc/nginx/naxsi.rules
+        }
+    }
+}

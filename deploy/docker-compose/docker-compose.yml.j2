@@ -1,0 +1,38 @@
+version: '2'
+
+services:
+  h5-wechat-nginx:
+    image: {{IMAGE_FULL_NAME}}
+    container_name: {{CONTAINER_NAME}}
+    cap_add:
+      - IPC_LOCK
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+    - ./nginx.conf:/etc/nginx/nginx.conf
+{% if IS_LOCAL_ENV %}
+    networks:
+    - {{DOCKER_HOST_NETWORK_NAME}}
+    extra_hosts:
+    - {{DOCKER_HOST_SERVER_DOMAIN}}:{{DOCKER_HOST_NETWORK_HOST_IP}}
+{% else %}
+    network_mode: "bridge"
+{% endif %}
+    ports:
+      - "{{H5_WECHAT_REFACTOR_PORT}}:80"
+    restart: {{CONTAINER_RESTART_POLICY}}
+{% if ENABLE_LOGGING %}
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "{{FLUENTD_ADDRESS}}"
+        tag: "docker.h5-wechat"
+{% endif %}
+
+{% if IS_LOCAL_ENV %}
+networks:
+  {{DOCKER_HOST_NETWORK_NAME}}:
+    external: true
+{% endif %}

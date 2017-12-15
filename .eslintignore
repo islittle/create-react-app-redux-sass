@@ -1,0 +1,7 @@
+/build/**
+/public/**
+/scripts/**
+/config/**
+/jsdoc/**
+registerServiceWorker.js
+package.json
