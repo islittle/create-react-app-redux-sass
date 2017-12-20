@@ -8,6 +8,11 @@ import './index.scss'
 
 @connect('/', 'HomeState', 'fetchChannels')
 class Home extends Component {
+    static propTypes = {
+        HomeState: PropTypes.object.isRequired,
+        route: PropTypes.object.isRequired,
+        actions:  PropTypes.object.isRequired,
+    }
     componentWillMount() {
         reqwest(window.location.origin+'?fetch=home')
         const self = this
@@ -21,7 +26,6 @@ class Home extends Component {
         return (
             <div className="Home">
                 <NavBar
-                    iconName=""
                     mode="light"
                     rightContent={
                         <Icon key="0" type="search" style={{ marginRight: '0.32rem' }} />
@@ -32,15 +36,5 @@ class Home extends Component {
             </div>
         )
     }
-}
-Home.defaultProps = {
-    actions: null,
-    route: null,
-    HomeState: null,
-}
-Home.propTypes = {
-    actions: PropTypes.object,
-    route: PropTypes.object,
-    HomeState: PropTypes.object,
 }
 export default Home
