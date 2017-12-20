@@ -5,7 +5,7 @@
   "author": "@wangfeng",
   "description": "create-react-app-redux-router-sass-asyncComponent-eslint-babel",
   "dependencies": {
-    "antd-mobile": "^1.6.8",
+    "antd-mobile": "^2.1.2",
     "autoprefixer": "7.1.2",
     "case-sensitive-paths-webpack-plugin": "2.1.1",
     "chalk": "1.1.3",
