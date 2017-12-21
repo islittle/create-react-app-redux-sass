@@ -3,7 +3,8 @@ import { Link } from 'react-router'
 import PropTypes from 'prop-types'
 import { NavBar, Icon } from 'antd-mobile'
 import reqwest from 'reqwest'
-import { connect } from '../../utils'
+import { connect } from 'utils'
+import { Footer } from 'component'
 import './index.scss'
 
 @connect('/', 'HomeState', 'fetchChannels')
@@ -33,6 +34,7 @@ class Home extends Component {
                 >一条生活馆</NavBar>
                 {channels.cinemaCount}
                 <Link to="/center" className="sub">进入个人中心</Link>
+                <Footer />
             </div>
         )
     }

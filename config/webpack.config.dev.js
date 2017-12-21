@@ -11,6 +11,7 @@ const eslintFormatter = require('react-dev-utils/eslintFormatter');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const getClientEnvironment = require('./env');
 const paths = require('./paths');
+const theme = require('../theme.js')()
 
 // Webpack uses `publicPath` to determine where the app is being served from.
 // In development, we always serve from the root. This makes config easier.
@@ -26,7 +27,7 @@ const env = getClientEnvironment(publicUrl);
 const pxtorem = require('postcss-pxtorem');
 const svgSpriteDirs = [
   require.resolve('antd-mobile').replace(/warn\.js$/, ''), // antd-mobile 内置svg
-  //path.resolve(__dirname, 'src/my-project-svg-foler'),  // 业务代码本地私有 svg 存放目录
+  path.resolve(__dirname, '../src/asset/svg'),  // 业务代码本地私有 svg 存放目录
 ];
 
 // This is the development configuration.
@@ -97,6 +98,11 @@ module.exports = {
       // Support React Native Web
       // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
       'react-native': 'react-native-web',
+      'utils': path.join(__dirname, "../src/utils/"),
+      'component': path.join(__dirname, "../src/component/"),
+      'asset': path.join(__dirname, "../src/asset/"),
+      'app': path.join(__dirname, "../src/app/"),
+      'mapi': path.join(__dirname, "../src/mapi/"),
     },
     plugins: [
       // Prevents users from importing files from outside of src/ (or node_modules/).
@@ -268,7 +274,7 @@ module.exports = {
               {
                 loader: require.resolve('less-loader'),
                 options: {
-                  modifyVars: { "@hd": "2px" },
+                  modifyVars: theme,
                 },
               },
             ],

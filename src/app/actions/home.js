@@ -1,7 +1,7 @@
 // import cache from 'utils/cache'
-import * as types from '../constants/ActionTypes'
+import * as types from 'app/constants/ActionTypes'
 // import reqwest from 'reqwest'
-import { handleResp } from '../../utils'
+import { handleResp } from 'utils'
 
 export default function fetchChannels() {
     return (dispatch) => {

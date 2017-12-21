@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { NavBar, ListView } from 'antd-mobile'
+import { NavBar, ListView, Icon } from 'antd-mobile'
 import reqwest from 'reqwest'
 import './index.scss'
 const data = [{
@@ -121,6 +121,7 @@ class Orderlist extends Component {
             <div className="Orderlist">
                 <NavBar
                     mode="light"
+                    icon={<Icon type="left" />}
                     onLeftClick={() => { window.history.go(-1) }}
                 >订单列表</NavBar>
                 <ListView
