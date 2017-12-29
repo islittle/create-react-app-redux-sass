@@ -1,6 +1,7 @@
 import { createStore, applyMiddleware } from 'redux'
 import thunk from 'redux-thunk'
 import { routerMiddleware } from 'react-router-redux'
+import { composeWithDevTools } from 'redux-devtools-extension'
 import reducer from '../reducers'
 let middlewares = [thunk]
 const MODE = process.env.MODE
@@ -16,6 +17,6 @@ if (MODE !== 'release') {
 }
 module.exports = function configureStore(history, initialState) {
     middlewares = [...middlewares, routerMiddleware(history)]
-    const createStoreWithMiddleware = applyMiddleware(...middlewares)(createStore)
+    const createStoreWithMiddleware = composeWithDevTools(applyMiddleware(...middlewares))(createStore)
     return createStoreWithMiddleware(reducer, initialState)
 }
