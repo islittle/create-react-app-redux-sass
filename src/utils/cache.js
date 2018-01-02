@@ -63,7 +63,7 @@ const cache = {
     store: (store.enabled ? store : cookie),
     cookie: {
         // expire Day
-        set: (key, value, expires = 7, path: '', domain) => {
+        set: (key, value, expires = 7, path = '', domain) => {
             cookie.set(key, value, {
                 expires,
                 path,
