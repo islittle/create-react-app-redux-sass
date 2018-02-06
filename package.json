@@ -109,6 +109,7 @@
     "less-loader": "4.0.5",
     "node-sass": "4.5.3",
     "postcss-pxtorem": "4.0.1",
+    "redux-devtools-extension": "2.13.2",
     "sass-loader": "6.0.6",
     "svg-sprite-loader": "0.3.1"
   }
