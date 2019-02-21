@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { NavBar, ListView, Icon } from 'antd-mobile'
 import reqwest from 'reqwest'
 import './index.scss'
@@ -31,6 +32,10 @@ function genData(pIndex = 0) {
 }
 
 class Orderlist extends Component {
+    static contextTypes = {
+        router: PropTypes.object.isRequired
+    }
+
     constructor(props) {
         super(props);
         const dataSource = new ListView.DataSource({
@@ -79,6 +84,10 @@ class Orderlist extends Component {
         }, 1000);
     }
 
+    goBack = () => {
+        this.context.router.go(-1)
+    }
+
     render() {
         const separator = (sectionID, rowID) => (
             <div
@@ -122,7 +131,7 @@ class Orderlist extends Component {
                 <NavBar
                     mode="light"
                     icon={<Icon type="left" />}
-                    onLeftClick={() => { window.history.go(-1) }}
+                    onLeftClick={this.goBack}
                 >订单列表</NavBar>
                 <ListView
                     ref={(el) => this.lv = el}

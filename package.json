@@ -46,6 +46,7 @@
   },
   "scripts": {
     "start": "node scripts/start.js",
+    "develop": "node scripts/build.js && serve -s build",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom"
   },
@@ -107,7 +108,7 @@
     "eslint-plugin-redux-saga": "0.5.0",
     "less": "2.7.3",
     "less-loader": "4.0.5",
-    "node-sass": "4.5.3",
+    "node-sass": "^4.11.0",
     "postcss-pxtorem": "4.0.1",
     "redux-devtools-extension": "2.13.2",
     "sass-loader": "6.0.6",

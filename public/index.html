@@ -6,46 +6,54 @@
     <meta content="yes" name="apple-mobile-web-app-capable">
     <meta content="yes" name="apple-touch-fullscreen">
     <meta content="telephone=no,email=no" name="format-detection">
+    <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="author" content="h5.yit.com By wangfeng islittle@outlook.com">
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json">
     <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
     <title>react@https://github.com/islittle/create-react-app-redux-sass</title>
     <script type="text/javascript">
-    (function(baseFontSize, fontscale) {
-        var _baseFontSize = baseFontSize || 100;
-        var _fontscale = fontscale || 1;
-        var win = window;
-        var doc = win.document;
-        var ua = navigator.userAgent;
-        var matches = ua.match(/Android[\S\s]+AppleWebkit\/(\d{3})/i);
-        var UCversion = ua.match(/U3\/((\d+|\.){5,})/i);
-        var isUCHd = UCversion && parseInt(UCversion[1].split('.').join(''), 10) >= 80;
-        var isIos = navigator.appVersion.match(/(iphone|ipad|ipod)/gi);
-        var dpr = win.devicePixelRatio || 1;
-        if (!isIos && !(matches && matches[1] > 534) && !isUCHd) {
-            // 如果非iOS, 非Android4.3以上, 非UC内核, 就不执行高清, dpr设为1;
-            dpr = 1;
-        }
-        var scale = 1 / dpr;
+        var Dpr = 1,
+        uAgent = window.navigator.userAgent,
+        isIOS = uAgent.match(/iphone/i),
+        isYIXIN = uAgent.match(/yixin/i),
+        is2345 = uAgent.match(/Mb2345/i),
+        ishaosou = uAgent.match(/mso_app/i),
+        isSogou = uAgent.match(/sogoumobilebrowser/gi),
+        isLiebao = uAgent.match(/liebaofast/i),
+        isGnbr = uAgent.match(/GNBR/i);
 
-        var metaEl = doc.querySelector('meta[name="viewport"]');
-        if (!metaEl) {
-            metaEl = doc.createElement('meta');
-            metaEl.setAttribute('name', 'viewport');
-            doc.head.appendChild(metaEl);
+        function resizeRoot() {
+            var e, i = screen.width > 0 && (window.innerWidth >= screen.width || 0 == window.innerWidth) ? screen.width : window.innerWidth,
+                n = screen.height > 0 && (window.innerHeight >= screen.height || 0 == window.innerHeight) ? screen.height : window.innerHeight;
+            window.devicePixelRatio && window.devicePixelRatio, isIOS && (i = screen.width, n = screen.height), i > n && (i = n), (e = (e = i > 1080 ? 144 : i / 7.5) > 32 ? e : 32) > 100 && (e = 100), window.screenWidth_ = i, isYIXIN || is2345 || ishaosou || isSogou || isLiebao || isGnbr ? setTimeout(function() { i = screen.width > 0 && (window.innerWidth >= screen.width || 0 == window.innerWidth) ? screen.width : window.innerWidth, n = screen.height > 0 && (window.innerHeight >= screen.height || 0 == window.innerHeight) ? screen.height : window.innerHeight, e = (e = i > 1080 ? 144 : i / 7.5) > 32 ? e : 32, document.getElementsByTagName("html")[0].style.fontSize = e + "px"}, 500) : (document.getElementsByTagName("html")[0].style.fontSize = e + "px")
         }
-        metaEl.setAttribute('content', 'width=device-width,user-scalable=no,initial-scale=' + scale + ',maximum-scale=' + scale + ',minimum-scale=' + scale);
-        doc.documentElement.style.fontSize = _baseFontSize / 2 * dpr * _fontscale + 'px';
-        window.viewportScale = dpr;
-    })();
-    // 引入 Promise 的 fallback 支持 (部分安卓手机不支持 Promise)
-    if (!window.Promise) {
-        document.writeln('<script src="https://as.alipayobjects.com/g/component/es6-promise/3.2.2/es6-promise.min.js"' + '>' + '<' + '/' + 'script>');
-    }
+        resizeRoot();
+        var reviseViewPort = function(e, i) {
+            var n = 0,
+                t = i || 5,
+                o = setInterval(function() {
+                    var e, i = screen.width > 0 && window.innerWidth >= screen.width ? screen.width : window.innerWidth;
+                    i < window.screenWidth_ ? (window.screenWidth_ = i, e = (e = i > 1080 ? 144 : i / 7.5) > 32 ? e : 32, document.getElementsByTagName("html")[0].style.fontSize = e + "px", clearInterval(o)) : n++, n >= t && clearInterval(o)
+                }, e || 200)
+        };
+        reviseViewPort(200);
+        // 引入 Promise 的 fallback 支持 (部分安卓手机不支持 Promise)
+        if (!window.Promise) {
+            document.writeln('<script src="https://as.alipayobjects.com/g/component/es6-promise/3.2.2/es6-promise.min.js"' + '>' + '<' + '/' + 'script>');
+        }
     </script>
+    <!-- 注入css -->
+    <% for (var css in htmlWebpackPlugin.files.css) { %>
+        <link href="<%=htmlWebpackPlugin.files.css[css] %>" rel="stylesheet">
+    <% } %>
 </head>
 
 <body>
     <div id="root"></div>
+    <!-- 注入js -->
+    <% for (var chunk in htmlWebpackPlugin.files.chunks) { %>
+        <script type="text/javascript" src="<%=htmlWebpackPlugin.files.chunks[chunk].entry %>"></script>
+    <% } %>
 </body>
 
 </html>

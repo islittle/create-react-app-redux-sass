@@ -52,9 +52,53 @@ const extractTextPluginOptions = shouldUseRelativeAssetPaths
 const pxtorem = require('postcss-pxtorem');
 const svgSpriteDirs = [
   require.resolve('antd-mobile').replace(/warn\.js$/, ''), // antd-mobile 内置svg
-  path.resolve(__dirname, '../src/asset/svg'),  // 业务代码本地私有 svg 存放目录
+  path.resolve(__dirname, '../src/assets/svg'),  // 业务代码本地私有 svg 存放目录
 ];
 
+/* chunk排序方法，会根据chunk名称在数组中的顺序进行排序 */
+const chunkSortFunc = (sortChunksKeys) => {
+  if (!sortChunksKeys || !sortChunksKeys.length) {
+    return 'dependency';
+  }
+  return (chunk1, chunk2) => {
+    let orders = sortChunksKeys;
+    let order1 = orders.indexOf(chunk1.names[0]);
+    let order2 = orders.indexOf(chunk2.names[0]);
+
+    if (order1 > order2) {
+      return 1;
+    } else if (order1 < order2) {
+      return -1;
+    } else {
+      return 0;
+    }
+  }
+}
+
+/* htmlPlugin处理，inject设为false，在html中通过模版语法注入到需要的位置；
+加入chunk的排序，避免因排序问题导致加载顺序不对而影响代码运行 */
+const newHtmlWebpackPlugin = () => {
+  const chunks = ['manifest', 'common', 'vendor', 'bundle']
+
+  return new HtmlWebpackPlugin({
+    chunks: chunks,
+    chunksSortMode: chunkSortFunc(chunks),
+    inject: false,
+    template: paths.appHtml,
+    minify: {
+      removeComments: true,
+      collapseWhitespace: true,
+      removeRedundantAttributes: true,
+      useShortDoctype: true,
+      removeEmptyAttributes: true,
+      removeStyleLinkTypeAttributes: true,
+      keepClosingSlash: true,
+      minifyJS: true,
+      minifyCSS: true,
+      minifyURLs: true,
+    },
+  })
+}
 // This is the production configuration.
 // It compiles slowly and is focused on producing a fast and minimal bundle.
 // The development configuration is different and lives in a separate file.
@@ -65,7 +109,17 @@ module.exports = {
   // You can exclude the *.map files from the build during deployment.
   devtool: shouldUseSourceMap ? 'source-map' : false,
   // In production, we only want to load the polyfills and the app code.
-  entry: [require.resolve('./polyfills'), paths.appIndexJs],
+  entry: {
+    /** 
+     * entry由数组模式改为对象 
+     * 
+     * bundle: app入口
+     * common: 目前是polyfill，之后有需要可以添加一些公共库
+     */
+    bundle: paths.appIndexJs,
+    vendor: ['react', 'react-router', 'react-dom', 'redux', 'react-redux'],
+    common: [path.resolve(__dirname, './polyfills')],
+  },
   output: {
     // The build folder.
     path: paths.appBuild,
@@ -105,7 +159,7 @@ module.exports = {
       'react-native': 'react-native-web',
       'utils': path.join(__dirname, "../src/utils/"),
       'component': path.join(__dirname, "../src/component/"),
-      'asset': path.join(__dirname, "../src/assets/"),
+      'assets': path.join(__dirname, "../src/assets/"),
       'images': path.join(__dirname, "../src/assets/images/"),
       'app': path.join(__dirname, "../src/app/"),
       'mapi': path.join(__dirname, "../src/mapi/"),
@@ -309,6 +363,7 @@ module.exports = {
     ],
   },
   plugins: [
+    
     // Makes some environment variables available in index.html.
     // The public URL is available as %PUBLIC_URL% in index.html, e.g.:
     // <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
@@ -316,22 +371,15 @@ module.exports = {
     // in `package.json`, in which case it will be the pathname of that URL.
     new InterpolateHtmlPlugin(env.raw),
     // Generates an `index.html` file with the <script> injected.
-    new HtmlWebpackPlugin({
-      inject: true,
-      template: paths.appHtml,
-      minify: {
-        removeComments: true,
-        collapseWhitespace: true,
-        removeRedundantAttributes: true,
-        useShortDoctype: true,
-        removeEmptyAttributes: true,
-        removeStyleLinkTypeAttributes: true,
-        keepClosingSlash: true,
-        minifyJS: true,
-        minifyCSS: true,
-        minifyURLs: true,
-      },
+
+    new webpack.optimize.CommonsChunkPlugin({
+      // webpack是倒序抽离公用js，这里顺序和页面js引用顺序相反，变换位置会导致页面加载时依赖报错
+      names: ['vendor', 'common', 'manifest'],
+      minChunks: Infinity
     }),
+    
+    newHtmlWebpackPlugin(),
+
     // Makes some environment variables available to the JS code, for example:
     // if (process.env.NODE_ENV === 'production') { ... }. See `./env.js`.
     // It is absolutely essential that NODE_ENV was set to production here.
@@ -353,7 +401,7 @@ module.exports = {
         // https://github.com/facebookincubator/create-react-app/issues/2488
         ascii_only: true,
       },
-      sourceMap: shouldUseSourceMap,
+      sourceMap: false,
     }),
     // Note: this won't work without ExtractTextPlugin.extract(..) in `loaders`.
     new ExtractTextPlugin({

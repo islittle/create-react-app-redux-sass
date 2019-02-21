@@ -1,10 +1,12 @@
 import React, { Component } from 'react'
-import { Link } from 'react-router'
 import PropTypes from 'prop-types'
+import { Link } from 'react-router'
 import { NavBar, Icon } from 'antd-mobile'
 import reqwest from 'reqwest'
 import { connect } from 'utils'
 import { Footer } from 'component'
+import LogoImage from 'images/1523276595068.jpg'
+import 'assets/svg/logo.svg'
 import './index.scss'
 
 @connect('/', 'HomeState', 'fetchChannels')
@@ -32,6 +34,10 @@ class Home extends Component {
                         <Icon key="0" type="search" style={{ marginRight: '0.32rem' }} />
                   }
                 >一条生活馆</NavBar>
+                <svg className="react-logo">
+                    <use xlinkHref="#logo"></use>
+                </svg>
+                <img src={LogoImage} alt="图片" className="logoImage" />
                 {channels.cinemaCount}
                 <Link to="/center" className="sub">进入个人中心</Link>
                 <Footer />

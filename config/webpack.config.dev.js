@@ -27,8 +27,41 @@ const env = getClientEnvironment(publicUrl);
 const pxtorem = require('postcss-pxtorem');
 const svgSpriteDirs = [
   require.resolve('antd-mobile').replace(/warn\.js$/, ''), // antd-mobile 内置svg
-  path.resolve(__dirname, '../src/asset/svg'),  // 业务代码本地私有 svg 存放目录
+  path.resolve(__dirname, '../src/assets/svg'),  // 业务代码本地私有 svg 存放目录
 ];
+
+/* chunk排序方法，会根据chunk名称在数组中的顺序进行排序 */
+const chunkSortFunc = (sortChunksKeys) => {
+  if (!sortChunksKeys || !sortChunksKeys.length) {
+    return 'dependency';
+  }
+  return (chunk1, chunk2) => {
+    let orders = sortChunksKeys;
+    let order1 = orders.indexOf(chunk1.names[0]);
+    let order2 = orders.indexOf(chunk2.names[0]);
+
+    if (order1 > order2) {
+      return 1;
+    } else if (order1 < order2) {
+      return -1;
+    } else {
+      return 0;
+    }
+  }
+}
+
+/* htmlPlugin处理，inject设为false，在html中通过模版语法注入到需要的位置；
+加入chunk的排序，避免因排序问题导致加载顺序不对而影响代码运行 */
+const newHtmlWebpackPlugin = () => {
+  const chunks = ['manifest', 'common', 'vendor', 'bundle']
+  
+  return new HtmlWebpackPlugin({
+    chunks: chunks,
+    chunksSortMode: chunkSortFunc(chunks),
+    inject: false,
+    template: paths.appHtml,
+  })
+}
 
 // This is the development configuration.
 // It is focused on developer experience and fast rebuilds.
@@ -40,9 +73,19 @@ module.exports = {
   // These are the "entry points" to our application.
   // This means they will be the "root" imports that are included in JS bundle.
   // The first two entry points enable "hot" CSS and auto-refreshes for JS.
-  entry: [
+  entry: {
+    /** 
+     * entry由数组模式改为对象 
+     * 
+     * bundle: app入口
+     * common: polyfill等基础库
+     * vendor: react等公共库
+     */
+    bundle: ['react-dev-utils/webpackHotDevClient', paths.appIndexJs],
+    vendor: ['react', 'react-router', 'react-dom', 'redux', 'react-redux'],
+    common: [path.resolve(__dirname, './polyfills')],
     // We ship a few polyfills by default:
-    require.resolve('./polyfills'),
+    // polyfill: require.resolve('./polyfills'),
     // Include an alternative client for WebpackDevServer. A client's job is to
     // connect to WebpackDevServer by a socket and get notified about changes.
     // When you save a file, the client will either apply hot updates (in case
@@ -53,13 +96,12 @@ module.exports = {
     // the line below with these two lines if you prefer the stock client:
     // require.resolve('webpack-dev-server/client') + '?/',
     // require.resolve('webpack/hot/dev-server'),
-    require.resolve('react-dev-utils/webpackHotDevClient'),
+    // devClient: require.resolve('react-dev-utils/webpackHotDevClient'),
     // Finally, this is your app's code:
-    paths.appIndexJs,
     // We include the app code last so that if there is a runtime error during
     // initialization, it doesn't blow up the WebpackDevServer client, and
     // changing JS code would still trigger a refresh.
-  ],
+  },
   output: {
     // Next line is not used in dev but WebpackDevServer crashes without it:
     path: paths.appBuild,
@@ -68,9 +110,9 @@ module.exports = {
     // This does not produce a real file. It's just the virtual path that is
     // served by WebpackDevServer in development. This is the JS bundle
     // containing code from all our entry points, and the Webpack runtime.
-    filename: 'static/js/bundle.js',
+    filename: 'static/js/[name].js',
     // There are also additional JS chunk files if you use code splitting.
-    chunkFilename: 'static/js/[name].[chunkhash:8].js',
+    chunkFilename: 'static/js/[name].chunk.js',
     // This is the URL that app is served from. We use "/" in development.
     publicPath: publicPath,
     // Point sourcemap entries to original disk location (format as URL on Windows)
@@ -100,7 +142,7 @@ module.exports = {
       'react-native': 'react-native-web',
       'utils': path.join(__dirname, "../src/utils/"),
       'component': path.join(__dirname, "../src/component/"),
-      'asset': path.join(__dirname, "../src/assets/"),
+      'assets': path.join(__dirname, "../src/assets/"),
       'images': path.join(__dirname, "../src/assets/images/"),
       'app': path.join(__dirname, "../src/app/"),
       'mapi': path.join(__dirname, "../src/mapi/"),
@@ -120,9 +162,6 @@ module.exports = {
       // TODO: Disable require.ensure as it's not a standard language feature.
       // We are waiting for https://github.com/facebookincubator/create-react-app/issues/2176.
       // { parser: { requireEnsure: false } },
-
-      // First, run the linter.
-      // It's important to do this before Babel processes the JS.
       {
         test: /\.(js|jsx)$/,
         enforce: 'pre',
@@ -137,6 +176,8 @@ module.exports = {
         ],
         include: paths.appSrc,
       },
+      // First, run the linter.
+      // It's important to do this before Babel processes the JS.
       {
         // "oneOf" will traverse all following loaders until one will
         // match the requirements. When no loader matches it will fall
@@ -289,16 +330,25 @@ module.exports = {
     ],
   },
   plugins: [
+    /* webpack打包分析工具，需要的时候去掉下一行的注释使用 */
+    // new webpackBundleAnalyzer(),
     // Makes some environment variables available in index.html.
     // The public URL is available as %PUBLIC_URL% in index.html, e.g.:
     // <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
     // In development, this will be an empty string.
     new InterpolateHtmlPlugin(env.raw),
     // Generates an `index.html` file with the <script> injected.
-    new HtmlWebpackPlugin({
-      inject: true,
-      template: paths.appHtml,
+    // new HtmlWebpackPlugin({
+    //   chunks: ['manifest', 'common', 'vendor', 'bundle',],
+    //   inject: true,
+    //   template: paths.appHtml,
+    // }),
+    new webpack.optimize.CommonsChunkPlugin({
+      // webpack是倒序抽离公用js，这里顺序和页面js引用顺序相反，变换位置会导致页面加载时依赖报错
+      names: ['vendor', 'common', 'manifest'],
+      minChunks: Infinity
     }),
+    newHtmlWebpackPlugin(),
     // Add module names to factory functions so they appear in browser profiler.
     new webpack.NamedModulesPlugin(),
     // Makes some environment variables available to the JS code, for example:
