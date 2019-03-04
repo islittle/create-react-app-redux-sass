@@ -1,5 +1,5 @@
+import 'babel-polyfill'
 import React from 'react'
-
 import ReactDom from 'react-dom'
 // minimizing bundle size of react-router
 import { Router, Route, useRouterHistory } from 'react-router'

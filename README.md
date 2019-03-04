@@ -15,6 +15,7 @@
 9. rem高清配置(pxtorem)
 10. css版本版本兼容
 11. svg-sprite
+12. webpack-bundle-analyzer 分析工具
 等等，并且添加一些自定义工具
 
 ##项目的基本目录结构:

@@ -48,7 +48,8 @@
     "start": "node scripts/start.js",
     "develop": "node scripts/build.js && serve -s build",
     "build": "node scripts/build.js",
-    "test": "node scripts/test.js --env=jsdom"
+    "test": "node scripts/test.js --env=jsdom",
+    "analyz": "node config/analyz.js"
   },
   "jest": {
     "collectCoverageFrom": [
@@ -94,6 +95,7 @@
     "babel-plugin-import": "1.6.0",
     "babel-plugin-transform-class-properties": "6.24.1",
     "babel-plugin-transform-decorators-legacy": "1.3.4",
+    "babel-polyfill": "^6.26.0",
     "babel-preset-es2015": "6.24.1",
     "babel-preset-react-app": "3.0.3",
     "babel-runtime": "6.26.0",
@@ -112,6 +114,7 @@
     "postcss-pxtorem": "4.0.1",
     "redux-devtools-extension": "2.13.2",
     "sass-loader": "6.0.6",
-    "svg-sprite-loader": "0.3.1"
+    "svg-sprite-loader": "0.3.1",
+    "webpack-bundle-analyzer": "^3.1.0"
   }
 }
