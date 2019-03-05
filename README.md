@@ -63,31 +63,71 @@
     ...
 ```
 
-安装：npm install 或者 yarn install
 
-启动：npm start 或者  yarn start
 
-打包：npm run build 或者 yarn build
+##交互命令
 
-打包启动本地服务：npm run develop 或者 yarn develop
+安装：
+```
+npm install 或者 yarn install
+```
+
+启动：
+```
+npm start 或者  yarn start
+```
+
+打包：
+```
+npm run build 或者 yarn build
+```
+
+打包启动本地服务：
+```
+npm run develop 或者 yarn develop
+```
+
+打包组成分析：
+```
+npm run analyz 或者 yarn analyz
+```
+
+交互模式运行测试(默认运行与上次提交后更改的文件相关的测试): 
+```
+npm run test 或者 yarn test
+```
 
 以yarn举例:
 
-指定某一个端口启动：sudo PORT=80 yarn start 
+指定某一个端口启动：
+```
+sudo PORT=80 yarn start 
+```
 
 
-pages每个页面中的reqwest(window.location.origin+'?fetch=xxx')模拟请求的可以去掉
+>pages每个页面中的reqwest(window.location.origin+'?fetch=xxx')模拟请求的可以去掉
 
-注意：如果你有以下报错
+
+
+##注意：如果你有以下报错
+
 ```
 Node Sass does not yet support your current environment: OS X 64-bit with Unsupported runtime (64)
 ```
-说明你需要更新node-sass版本
-执行：yarn add node-sass -D 或者 npm install node-sass --save-dev
+>说明你需要更新node-sass版本
+执行：
+```
+yarn add node-sass -D 或者 npm install node-sass --save-dev
+```
 
-如果执行develop提示安装serve：
-执行：yarn global upgrade serve
+>如果执行develop提示安装serve：
+执行：
+```
+yarn global upgrade serve
+```
+
+###邮箱：islittle@outlook.com
+
+###Author: Wang Feng
 
 
-
-邮箱：islittle@outlook.com
