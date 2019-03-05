@@ -65,7 +65,7 @@
 
 
 
-##交互命令
+## 交互命令
 
 安装：
 ```
@@ -109,7 +109,7 @@ sudo PORT=80 yarn start
 
 
 
-##注意：如果你有以下报错
+## 注意：如果你有以下报错
 
 ```
 Node Sass does not yet support your current environment: OS X 64-bit with Unsupported runtime (64)
@@ -126,8 +126,8 @@ yarn add node-sass -D 或者 npm install node-sass --save-dev
 yarn global upgrade serve
 ```
 
-###邮箱：islittle@outlook.com
+### 邮箱：islittle@outlook.com
 
-###Author: Wang Feng
+### Author: Wang Feng
 
 
