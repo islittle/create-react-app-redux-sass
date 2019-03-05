@@ -104,7 +104,7 @@ sudo PORT=80 yarn start
 ```
 <br>
 <br>
->** _pages每个页面中的reqwest(window.location.origin+'?fetch=xxx')模拟请求的可以去掉_ **
+**pages每个页面中的reqwest(window.location.origin+'?fetch=xxx')模拟请求的可以去掉**
 <br>
 <br>
 
