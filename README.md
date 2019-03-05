@@ -17,9 +17,10 @@
 11. svg-sprite
 12. webpack-bundle-analyzer 分析工具
 
-等等，并且添加一些自定义工具
+ 等等，并且添加一些自定义工具
 <br>
 <br>
+
 ## 基本目录结构:
 
 ```
@@ -65,7 +66,9 @@
 ```
 <br>
 <br>
+
 ## 交互命令
+
 `安装：`
 ```
 npm install 或者 yarn install
@@ -102,12 +105,12 @@ npm run test 或者 yarn test
 ```
 sudo PORT=80 yarn start 
 ```
-<br>
-<br>
-#### pages每个页面中的reqwest(window.location.origin+'?fetch=xxx')模拟请求的可以去掉
-<br>
+
 <br>
 
+#### pages每个页面中的reqwest(window.location.origin+'?fetch=xxx')模拟请求的可以去掉
+
+<br>
 
 ### 注意：如果你有以下报错
 ```
