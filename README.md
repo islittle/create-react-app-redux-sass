@@ -3,7 +3,7 @@
 
 [基本框架create-react-app](https://github.com/facebookincubator/create-react-app)
 
-## 项目基础集合功能
+## 基础集合功能
 1. antd-mobile
 2. redux
 3. react-router
@@ -17,9 +17,11 @@
 11. svg-sprite
 12. webpack-bundle-analyzer 分析工具
 等等，并且添加一些自定义工具
-
-##项目的基本目录结构:
 <br>
+<br>
+<br>
+
+## 基本目录结构:
 
 ```
 /
@@ -62,11 +64,12 @@
     yarn.lock
     ...
 ```
-
-
+<br>
+<br>
+<br>
 
 ## 交互命令
-
+<br>
 安装：
 ```
 npm install 或者 yarn install
@@ -103,31 +106,38 @@ npm run test 或者 yarn test
 ```
 sudo PORT=80 yarn start 
 ```
+<br>
+<br>
+
+**pages每个页面中的reqwest(window.location.origin+'?fetch=xxx')模拟请求的可以去掉**
+
+<br>
+<br>
 
 
->pages每个页面中的reqwest(window.location.origin+'?fetch=xxx')模拟请求的可以去掉
-
-
-
-## 注意：如果你有以下报错
-
+### 注意：如果你有以下报错
+:o
 ```
 Node Sass does not yet support your current environment: OS X 64-bit with Unsupported runtime (64)
 ```
->说明你需要更新node-sass版本
+> 说明你需要更新node-sass版本
+
 执行：
+
 ```
 yarn add node-sass -D 或者 npm install node-sass --save-dev
 ```
 
 >如果执行develop提示安装serve：
+
 执行：
+
 ```
 yarn global upgrade serve
 ```
 
-### 邮箱：islittle@outlook.com
+### 邮箱：`islittle@outlook.com`
 
-### Author: Wang Feng
+### Author: `Wang Feng`
 
 
