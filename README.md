@@ -16,11 +16,10 @@
 10. css版本版本兼容
 11. svg-sprite
 12. webpack-bundle-analyzer 分析工具
+
 等等，并且添加一些自定义工具
 <br>
 <br>
-<br>
-
 ## 基本目录结构:
 
 ```
@@ -66,57 +65,51 @@
 ```
 <br>
 <br>
-<br>
-
 ## 交互命令
-<br>
-安装：
+`安装：`
 ```
 npm install 或者 yarn install
 ```
 
-启动：
+`启动：`
 ```
 npm start 或者  yarn start
 ```
 
-打包：
+`打包：`
 ```
 npm run build 或者 yarn build
 ```
 
-打包启动本地服务：
+`打包启动本地服务：`
 ```
 npm run develop 或者 yarn develop
 ```
 
-打包组成分析：
+`打包组成分析：`
 ```
 npm run analyz 或者 yarn analyz
 ```
 
-交互模式运行测试(默认运行与上次提交后更改的文件相关的测试): 
+`交互模式运行测试(默认运行与上次提交后更改的文件相关的测试): `
 ```
 npm run test 或者 yarn test
 ```
 
 以yarn举例:
 
-指定某一个端口启动：
+`指定某一个端口启动：`
 ```
 sudo PORT=80 yarn start 
 ```
 <br>
 <br>
-
-**pages每个页面中的reqwest(window.location.origin+'?fetch=xxx')模拟请求的可以去掉**
-
+>** _pages每个页面中的reqwest(window.location.origin+'?fetch=xxx')模拟请求的可以去掉_ **
 <br>
 <br>
 
 
 ### 注意：如果你有以下报错
-:o
 ```
 Node Sass does not yet support your current environment: OS X 64-bit with Unsupported runtime (64)
 ```
