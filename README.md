@@ -1,6 +1,8 @@
 
 @wangfeng
 
+更新：webpack 已经更新到4.X， 以及添加了多线程happy打包 [提交修改部分查看]()
+
 [基本框架create-react-app](https://github.com/facebookincubator/create-react-app)
 
 ## 基础集合功能

@@ -4,15 +4,22 @@ const autoprefixer = require('autoprefixer');
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
 const SWPrecacheWebpackPlugin = require('sw-precache-webpack-plugin');
 const eslintFormatter = require('react-dev-utils/eslintFormatter');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const OptimizeCssAssetsPlugin = require("optimize-css-assets-webpack-plugin");//CSS模块资源优化插件
+// 多线程
+let HappyPack = require('happypack');
+let os = require('os');
+let happyThreadPool = HappyPack.ThreadPool({ size: os.cpus().length });
 const paths = require('./paths');
 const theme = require('../theme.js')()
 const getClientEnvironment = require('./env');
+// const webpackBundleAnalyzer = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 // Webpack uses `publicPath` to determine where the app is being served from.
 // It requires a trailing slash, or the file assets will get an incorrect path.
@@ -26,17 +33,18 @@ const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 // as %PUBLIC_URL% in `index.html` and `process.env.PUBLIC_URL` in JavaScript.
 // Omit trailing slash as %PUBLIC_URL%/xyz looks better than %PUBLIC_URL%xyz.
 const publicUrl = publicPath.slice(0, -1);
+
 // Get environment variables to inject into our app.
 const env = getClientEnvironment(publicUrl);
 
 // Assert this just to be safe.
 // Development builds of React are slow and not intended for production.
 if (env.stringified['process.env'].NODE_ENV !== '"production"') {
-  throw new Error('Production builds must have NODE_ENV=production.');
+    throw new Error('Production builds must have NODE_ENV=production.');
 }
 
 // Note: defined here because it will be used more than once.
-const cssFilename = 'static/css/[name].[contenthash:8].css';
+const cssFilename = 'static/css/[name].[hash:8].css';
 
 // ExtractTextPlugin expects the build output to be flat.
 // (See https://github.com/webpack-contrib/extract-text-webpack-plugin/issues/27)
@@ -55,54 +63,22 @@ const svgSpriteDirs = [
   path.resolve(__dirname, '../src/assets/svg'),  // 业务代码本地私有 svg 存放目录
 ];
 
-/* chunk排序方法，会根据chunk名称在数组中的顺序进行排序 */
-const chunkSortFunc = (sortChunksKeys) => {
-  if (!sortChunksKeys || !sortChunksKeys.length) {
-    return 'dependency';
-  }
-  return (chunk1, chunk2) => {
-    let orders = sortChunksKeys;
-    let order1 = orders.indexOf(chunk1.names[0]);
-    let order2 = orders.indexOf(chunk2.names[0]);
-
-    if (order1 > order2) {
-      return 1;
-    } else if (order1 < order2) {
-      return -1;
-    } else {
-      return 0;
-    }
-  }
+// 创建多线程函数
+function createHappyPlugin(id, loaders) {
+  return new HappyPack({
+    id: id,
+    loaders: loaders,
+    threadPool: happyThreadPool,
+    cache: true,
+    verbose: true,
+  });
 }
 
-/* htmlPlugin处理，inject设为false，在html中通过模版语法注入到需要的位置；
-加入chunk的排序，避免因排序问题导致加载顺序不对而影响代码运行 */
-const newHtmlWebpackPlugin = () => {
-  const chunks = ['manifest', 'common', 'vendor', 'bundle']
-
-  return new HtmlWebpackPlugin({
-    chunks: chunks,
-    chunksSortMode: chunkSortFunc(chunks),
-    inject: false,
-    template: paths.appHtml,
-    minify: {
-      removeComments: true,
-      collapseWhitespace: true,
-      removeRedundantAttributes: true,
-      useShortDoctype: true,
-      removeEmptyAttributes: true,
-      removeStyleLinkTypeAttributes: true,
-      keepClosingSlash: true,
-      minifyJS: true,
-      minifyCSS: true,
-      minifyURLs: true,
-    },
-  })
-}
 // This is the production configuration.
 // It compiles slowly and is focused on producing a fast and minimal bundle.
 // The development configuration is different and lives in a separate file.
 module.exports = {
+  mode: 'production',
   // Don't attempt to continue if there are any errors.
   bail: true,
   // We generate sourcemaps in production. This is slow but gives good results.
@@ -115,10 +91,9 @@ module.exports = {
      * 
      * bundle: app入口
      * common: 目前是polyfill，之后有需要可以添加一些公共库
+     * collect: 日志采集脚本
      */
-    bundle: paths.appIndexJs,
-    vendor: ['react', 'react-router', 'react-dom', 'redux', 'react-redux'],
-    common: [path.resolve(__dirname, './polyfills')],
+    bundle: [path.resolve(__dirname, './polyfills'),paths.appIndexJs],
   },
   output: {
     // The build folder.
@@ -162,7 +137,9 @@ module.exports = {
       'assets': path.join(__dirname, "../src/assets/"),
       'images': path.join(__dirname, "../src/assets/images/"),
       'app': path.join(__dirname, "../src/app/"),
+      'api': path.join(__dirname, "../src/api/"),
       'mapi': path.join(__dirname, "../src/mapi/"),
+      'mixin_scss': path.join(__dirname, '../src/pages/mixin.scss'),
     },
     plugins: [
       // Prevents users from importing files from outside of src/ (or node_modules/).
@@ -215,15 +192,9 @@ module.exports = {
           // Process JS with Babel.
           {
             test: /\.(js|jsx)$/,
+            loader: 'happypack/loader?id=happyBabel',
+            exclude: /node_modules/,
             include: paths.appSrc,
-            loader: require.resolve('babel-loader'),
-            options: {
-              // antd-mobile wangfeng add
-              plugins: [
-                ['import', { libraryName: 'antd-mobile', style: true }],
-              ],
-              compact: true,
-            },
           },
           // The notation here is somewhat confusing.
           // "postcss" loader applies autoprefixer to our CSS.
@@ -239,44 +210,39 @@ module.exports = {
           // in the main CSS file.
           {
             test: /\.css$/,
-            loader: ExtractTextPlugin.extract(
-              Object.assign(
+              use: [
                 {
-                  fallback: require.resolve('style-loader'),
-                  use: [
-                    {
-                      loader: require.resolve('css-loader'),
-                      options: {
-                        importLoaders: 1,
-                        minimize: true,
-                        sourceMap: shouldUseSourceMap,
-                      },
-                    },
-                    {
-                      loader: require.resolve('postcss-loader'),
-                      options: {
-                        // Necessary for external CSS imports to work
-                        // https://github.com/facebookincubator/create-react-app/issues/2677
-                        ident: 'postcss',
-                        plugins: () => [
-                          require('postcss-flexbugs-fixes'),
-                          autoprefixer({
-                            browsers: [
-                              '>1%',
-                              'last 4 versions',
-                              'Firefox ESR',
-                              'not ie < 9', // React doesn't support IE8 anyway
-                            ],
-                            flexbox: 'no-2009',
-                          }),
-                        ],
-                      },
-                    },
-                  ],
+                   loader: MiniCssExtractPlugin.loader//建议生产环境采用此方式解耦CSS文件与js文件
                 },
-                extractTextPluginOptions
-              )
-            ),
+                {
+                  loader: require.resolve('css-loader'),
+                  options: {
+                    importLoaders: 1,
+                    minimize: true,
+                    sourceMap: shouldUseSourceMap,
+                  },
+                },
+                {
+                  loader: require.resolve('postcss-loader'),
+                  options: {
+                    // Necessary for external CSS imports to work
+                    // https://github.com/facebookincubator/create-react-app/issues/2677
+                    ident: 'postcss',
+                    plugins: () => [
+                      require('postcss-flexbugs-fixes'),
+                      autoprefixer({
+                        browsers: [
+                          '>1%',
+                          'last 4 versions',
+                          'Firefox ESR',
+                          'not ie < 9', // React doesn't support IE8 anyway
+                        ],
+                        flexbox: 'no-2009',
+                      }),
+                    ],
+                  },
+                },
+              ],
             // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
           },
           // "file" loader makes sure assets end up in the `build` folder.
@@ -316,7 +282,7 @@ module.exports = {
               {
                 loader: require.resolve('sass-loader'),
                 options: {
-                 
+
                 },
               },
             ],
@@ -362,22 +328,114 @@ module.exports = {
       },
     ],
   },
+  // webpack 4.x
+  optimization: {
+    runtimeChunk: {
+      name: 'manifest'
+    },
+    minimize: true,
+    noEmitOnErrors: true,
+    minimizer: [
+      new UglifyJSPlugin({
+        uglifyOptions: {
+          compress: {
+            // warnings: false,
+            // Disabled because of an issue with Uglify breaking seemingly valid code:
+            // https://github.com/facebookincubator/create-react-app/issues/2376
+            // Pending further investigation:
+            // https://github.com/mishoo/UglifyJS2/issues/2011
+            comparisons: false,
+          },
+          output: {
+            comments: false,
+            // Turned on because emoji and regex is not minified properly using default
+            // https://github.com/facebookincubator/create-react-app/issues/2488
+            ascii_only: true,
+          },
+          sourceMap: false,
+        }
+      }),
+      new OptimizeCssAssetsPlugin(extractTextPluginOptions)
+    ],
+    splitChunks: {
+      chunks: 'all',
+      minSize: 30000,
+      maxSize: 0,
+      minChunks: 1,
+      maxAsyncRequests: 5,
+      maxInitialRequests: 3,
+      automaticNameDelimiter: '~',
+      name: true,
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendor",
+          chunks: "all",
+          minChunks: 2,
+          priority: -10
+        },
+        commons: {
+            name: "commons",
+            chunks: "initial",
+            minChunks: 3
+        },
+        default: {
+          minChunks: 3,
+          priority: -20,
+          reuseExistingChunk: true
+        }
+      }
+    }
+  },
   plugins: [
+    // 多线程打包
+    createHappyPlugin('happyBabel',[{
+      loader:'babel-loader',
+      options: {
+        // antd-mobile wangfeng add
+        plugins: [
+          ['import', { libraryName: 'antd-mobile', style: true }],
+        ],
+         compact: true,
+      },
+    }]),
+    /* webpack打包分析工具，需要的时候去掉下一行的注释使用 */
+    // new webpackBundleAnalyzer(),
+    
     // Makes some environment variables available in index.html.
     // The public URL is available as %PUBLIC_URL% in index.html, e.g.:
     // <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
     // In production, it will be an empty string unless you specify "homepage"
     // in `package.json`, in which case it will be the pathname of that URL.
-    new InterpolateHtmlPlugin(env.raw),
     // Generates an `index.html` file with the <script> injected.
 
-    new webpack.optimize.CommonsChunkPlugin({
-      // webpack是倒序抽离公用js，这里顺序和页面js引用顺序相反，变换位置会导致页面加载时依赖报错
-      names: ['vendor', 'common', 'manifest'],
-      minChunks: Infinity
-    }),
+    // new webpack.optimize.CommonsChunkPlugin({
+    //   // webpack是倒序抽离公用js，这里顺序和页面js引用顺序相反，变换位置会导致页面加载时依赖报错
+    //   names: ['vendor', 'common', 'manifest'],
+    //   minChunks: Infinity
+    // }),
     
-    newHtmlWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      // chunks: newHtmlWebpackPluginChunks,
+      // chunksSortMode: chunkSortFunc(newHtmlWebpackPluginChunks),
+      inject: true,
+      template: paths.appHtml,
+      chunksSortMode: 'none',
+      minify: {
+        removeComments: true,
+        collapseWhitespace: true,
+        removeRedundantAttributes: true,
+        useShortDoctype: true,
+        removeEmptyAttributes: true,
+        removeStyleLinkTypeAttributes: true,
+        keepClosingSlash: true,
+        minifyJS: true,
+        minifyCSS: true,
+        minifyURLs: true,
+      },
+    }),
+
+    new InterpolateHtmlPlugin(env.raw),
 
     // Makes some environment variables available to the JS code, for example:
     // if (process.env.NODE_ENV === 'production') { ... }. See `./env.js`.
@@ -385,25 +443,8 @@ module.exports = {
     // Otherwise React will be compiled in the very slow development mode.
     new webpack.DefinePlugin(env.stringified),
     // Minify the code.
-    new webpack.optimize.UglifyJsPlugin({
-      compress: {
-        warnings: false,
-        // Disabled because of an issue with Uglify breaking seemingly valid code:
-        // https://github.com/facebookincubator/create-react-app/issues/2376
-        // Pending further investigation:
-        // https://github.com/mishoo/UglifyJS2/issues/2011
-        comparisons: false,
-      },
-      output: {
-        comments: false,
-        // Turned on because emoji and regex is not minified properly using default
-        // https://github.com/facebookincubator/create-react-app/issues/2488
-        ascii_only: true,
-      },
-      sourceMap: false,
-    }),
     // Note: this won't work without ExtractTextPlugin.extract(..) in `loaders`.
-    new ExtractTextPlugin({
+    new MiniCssExtractPlugin({
       filename: cssFilename,
     }),
     // Generate a manifest file which contains a mapping of all asset filenames

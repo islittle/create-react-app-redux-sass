@@ -42,18 +42,10 @@
             document.writeln('<script src="https://as.alipayobjects.com/g/component/es6-promise/3.2.2/es6-promise.min.js"' + '>' + '<' + '/' + 'script>');
         }
     </script>
-    <!-- 注入css -->
-    <% for (var css in htmlWebpackPlugin.files.css) { %>
-        <link href="<%=htmlWebpackPlugin.files.css[css] %>" rel="stylesheet">
-    <% } %>
 </head>
 
 <body>
     <div id="root"></div>
-    <!-- 注入js -->
-    <% for (var chunk in htmlWebpackPlugin.files.chunks) { %>
-        <script type="text/javascript" src="<%=htmlWebpackPlugin.files.chunks[chunk].entry %>"></script>
-    <% } %>
 </body>
 
 </html>

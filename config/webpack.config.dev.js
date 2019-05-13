@@ -9,9 +9,14 @@ const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
 const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeModulesPlugin');
 const eslintFormatter = require('react-dev-utils/eslintFormatter');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
+// 多线程
+let HappyPack = require('happypack');
+let os = require('os');
+let happyThreadPool = HappyPack.ThreadPool({ size: os.cpus().length });
 const getClientEnvironment = require('./env');
 const paths = require('./paths');
 const theme = require('../theme.js')()
+const webpackBundleAnalyzer = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 // Webpack uses `publicPath` to determine where the app is being served from.
 // In development, we always serve from the root. This makes config easier.
@@ -30,43 +35,22 @@ const svgSpriteDirs = [
   path.resolve(__dirname, '../src/assets/svg'),  // 业务代码本地私有 svg 存放目录
 ];
 
-/* chunk排序方法，会根据chunk名称在数组中的顺序进行排序 */
-const chunkSortFunc = (sortChunksKeys) => {
-  if (!sortChunksKeys || !sortChunksKeys.length) {
-    return 'dependency';
-  }
-  return (chunk1, chunk2) => {
-    let orders = sortChunksKeys;
-    let order1 = orders.indexOf(chunk1.names[0]);
-    let order2 = orders.indexOf(chunk2.names[0]);
-
-    if (order1 > order2) {
-      return 1;
-    } else if (order1 < order2) {
-      return -1;
-    } else {
-      return 0;
-    }
-  }
-}
-
-/* htmlPlugin处理，inject设为false，在html中通过模版语法注入到需要的位置；
-加入chunk的排序，避免因排序问题导致加载顺序不对而影响代码运行 */
-const newHtmlWebpackPlugin = () => {
-  const chunks = ['manifest', 'common', 'vendor', 'bundle']
-  
-  return new HtmlWebpackPlugin({
-    chunks: chunks,
-    chunksSortMode: chunkSortFunc(chunks),
-    inject: false,
-    template: paths.appHtml,
-  })
+// 创建多线程函数
+function createHappyPlugin(id, loaders) {
+  return new HappyPack({
+    id: id,
+    loaders: loaders,
+    threadPool: happyThreadPool,
+    cache: true,
+    verbose: true,
+  });
 }
 
 // This is the development configuration.
 // It is focused on developer experience and fast rebuilds.
 // The production configuration is different and lives in a separate file.
 module.exports = {
+  mode: 'development',
   // You may want 'eval' instead if you prefer to see the compiled output in DevTools.
   // See the discussion in https://github.com/facebookincubator/create-react-app/issues/343.
   devtool: 'cheap-module-source-map',
@@ -81,9 +65,8 @@ module.exports = {
      * common: polyfill等基础库
      * vendor: react等公共库
      */
-    bundle: ['react-dev-utils/webpackHotDevClient', paths.appIndexJs],
+    bundle: ['react-dev-utils/webpackHotDevClient', path.resolve(__dirname, './polyfills'), paths.appIndexJs],
     vendor: ['react', 'react-router', 'react-dom', 'redux', 'react-redux'],
-    common: [path.resolve(__dirname, './polyfills')],
     // We ship a few polyfills by default:
     // polyfill: require.resolve('./polyfills'),
     // Include an alternative client for WebpackDevServer. A client's job is to
@@ -145,7 +128,9 @@ module.exports = {
       'assets': path.join(__dirname, "../src/assets/"),
       'images': path.join(__dirname, "../src/assets/images/"),
       'app': path.join(__dirname, "../src/app/"),
+      'api': path.join(__dirname, "../src/api/"),
       'mapi': path.join(__dirname, "../src/mapi/"),
+      'mixin_scss': path.join(__dirname, '../src/pages/mixin.scss'),
     },
     plugins: [
       // Prevents users from importing files from outside of src/ (or node_modules/).
@@ -197,18 +182,9 @@ module.exports = {
           // Process JS with Babel.
           {
             test: /\.(js|jsx)$/,
+            loader: 'happypack/loader?id=happyBabel',
+            exclude: /node_modules/,
             include: paths.appSrc,
-            loader: require.resolve('babel-loader'),
-            options: {
-              // antd-mobile wangfeng add
-              plugins: [
-                ['import', { libraryName: 'antd-mobile', style: true }],
-              ],
-              // This is a feature of `babel-loader` for webpack (not Babel itself).
-              // It enables caching results in ./node_modules/.cache/babel-loader/
-              // directory for faster rebuilds.
-              cacheDirectory: true,
-            },
           },
           // "postcss" loader applies autoprefixer to our CSS.
           // "css" loader resolves paths in CSS and adds assets as dependencies.
@@ -329,26 +305,38 @@ module.exports = {
       // Make sure to add the new loader(s) before the "file" loader.
     ],
   },
+  optimization: {
+    namedModules: true,
+    nodeEnv: 'development',
+  },
   plugins: [
+    // 多线程打包
+    createHappyPlugin('happyBabel',[{
+        loader:'babel-loader',
+        options: {
+          // antd-mobile wangfeng add
+          plugins: [
+            ['import', { libraryName: 'antd-mobile', style: true }],
+          ],
+          cacheDirectory: true,
+        },
+      }]),
     /* webpack打包分析工具，需要的时候去掉下一行的注释使用 */
     // new webpackBundleAnalyzer(),
+
     // Makes some environment variables available in index.html.
     // The public URL is available as %PUBLIC_URL% in index.html, e.g.:
     // <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
     // In development, this will be an empty string.
-    new InterpolateHtmlPlugin(env.raw),
     // Generates an `index.html` file with the <script> injected.
-    // new HtmlWebpackPlugin({
-    //   chunks: ['manifest', 'common', 'vendor', 'bundle',],
-    //   inject: true,
-    //   template: paths.appHtml,
-    // }),
-    new webpack.optimize.CommonsChunkPlugin({
-      // webpack是倒序抽离公用js，这里顺序和页面js引用顺序相反，变换位置会导致页面加载时依赖报错
-      names: ['vendor', 'common', 'manifest'],
-      minChunks: Infinity
+    new HtmlWebpackPlugin({
+      // chunks: newHtmlWebpackPluginChunks,
+      // chunksSortMode: chunkSortFunc(newHtmlWebpackPluginChunks),
+      inject: true,
+      template: paths.appHtml,
+      chunksSortMode: 'none',
     }),
-    newHtmlWebpackPlugin(),
+    new InterpolateHtmlPlugin(env.raw),
     // Add module names to factory functions so they appear in browser profiler.
     new webpack.NamedModulesPlugin(),
     // Makes some environment variables available to the JS code, for example:
